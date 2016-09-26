@@ -45,26 +45,29 @@ test('should pass new value to subscribers', function (t) {
 })
 
 test('should allow to unsubscribe while listening', function (t) {
-  t.plan(1)
+  t.plan(4)
   var o = Observable(0)
   var order = recordOrder()
   o.subscribe(order.record('A'))
   var unsubscribe = o.subscribe(function (val) {
     order.record('B')(val)
     unsubscribe()
+    t.equal(o(1.5), 1.5)
     setImmediate(function () {
-      o(2)
+      t.equal(o(2), 2)
       t.deepEqual(order.list, [
         {name: 'A', val: 1},
         {name: 'B', val: 1},
         {name: 'C', val: 1},
+        {name: 'A', val: 1.5},
+        {name: 'C', val: 1.5},
         {name: 'A', val: 2},
         {name: 'C', val: 2}
       ])
     })
   })
   o.subscribe(order.record('C'))
-  o(1)
+  t.equal(o(1), 1)
 })
 
 test('should throw an exception if something else but a function is added as listener', function (t) {
