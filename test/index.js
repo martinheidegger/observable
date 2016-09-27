@@ -22,6 +22,10 @@ function recordOrder () {
   }
 }
 
+function values (entry) {
+  return entry.val
+}
+
 /**
  * Tests
  */
@@ -152,9 +156,7 @@ test('subscription on the same value not being changed to the same value', funct
   // Number after null
   t.equals(o(3), 3)
   t.equals(o(3), 3)
-  var list = order.list.map(function (entry) {
-    return entry.val
-  })
+  var list = order.list.map(values)
   t.ok(isNaN(list.splice(4, 1)[0]))
   t.ok(isNaN(list.splice(4, 1)[0]))
   t.deepEqual(list, [
@@ -178,11 +180,23 @@ test('Changing to same during update', function (t) {
     o(3)
   })
   o(1)
-  t.deepEqual(order.list.map(function (entry) {
-    return entry.val
-  }), [
+  t.deepEqual(order.list.map(values), [
     1,
     3
+  ])
+  t.end()
+})
+
+test('should allow to force update', function (t) {
+  var o = Observable(0)
+  var order = recordOrder()
+  o.subscribe(order.record('A'))
+  o(0)
+  o(1)
+  o(1, true)
+  t.deepEqual(order.list.map(values), [
+    1,
+    1
   ])
   t.end()
 })
