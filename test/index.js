@@ -130,6 +130,63 @@ test('should work with 0, 1 or many listeners', function (t) {
   t.end()
 })
 
+test('subscription on the same value not being changed to the same value', function (t) {
+  var o = Observable(0)
+  var order = recordOrder()
+  o.subscribe(order.record('A'))
+  t.equals(o(1), 1)
+  t.equals(o(1), 1)
+  t.equals(o(2), 2)
+  // undefined should work
+  t.equals(o(undefined), undefined)
+  t.equals(o(undefined), undefined)
+  // Infinity test
+  t.equals(o(1 / 0), Number.POSITIVE_INFINITY)
+  t.equals(o(1 / 0), Number.POSITIVE_INFINITY)
+  // Two isNaN after another should be sent twice
+  t.ok(isNaN(o(parseInt('a', 10))))
+  t.ok(isNaN(o(parseInt('a', 10))))
+  // twice null
+  t.equals(o(null), null)
+  t.equals(o(null), null)
+  // Number after null
+  t.equals(o(3), 3)
+  t.equals(o(3), 3)
+  var list = order.list.map(function (entry) {
+    return entry.val
+  })
+  t.ok(isNaN(list.splice(4, 1)[0]))
+  t.ok(isNaN(list.splice(4, 1)[0]))
+  t.deepEqual(list, [
+    1,
+    2,
+    undefined,
+    Number.POSITIVE_INFINITY,
+    null,
+    3
+  ])
+  t.end()
+})
+
+test('Changing to same during update', function (t) {
+  var o = Observable(0)
+  var order = recordOrder()
+  o.subscribe(order.record('A'))
+  o.subscribe(function () {
+    o(2)
+    o(1)
+    o(3)
+  })
+  o(1)
+  t.deepEqual(order.list.map(function (entry) {
+    return entry.val
+  }), [
+    1,
+    3
+  ])
+  t.end()
+})
+
 test('it should work without subscriber', function (t) {
   var o = Observable(0)
   o(1)
